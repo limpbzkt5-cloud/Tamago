@@ -450,6 +450,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     paletteStyle: localStorage.getItem('riff_palette_style') || 'classic',
     meshBrightness: parseInt(localStorage.getItem('riff_mesh_brightness') || '100', 10),
     themeAccent: localStorage.getItem('riff_theme_accent') || '#dc4b2f',
+    scrubberStyle: localStorage.getItem('tamago_scrubber_style') || 'koi',
     themeIntensity: parseInt(localStorage.getItem('riff_theme_intensity') || '0'),
     themeBrightness: parseInt(localStorage.getItem('riff_theme_brightness') || '50'),
     trEnabled: localStorage.getItem('riff_tr_enabled') === 'true',
@@ -762,7 +763,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   ]);
 
   function generateM3Palette(hexColor, mode, intensity, brightness) {
-    if (!hexColor) hexColor = '#6750A4';
+    if (!hexColor) hexColor = '#dc4b2f';
     const rgb = hexToRgb(hexColor);
     const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
     const h = hsl.h;
@@ -781,11 +782,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     };
 
-    const setSurfaceToken = (prop, val) => {
-      root.style.setProperty(prop, tint(val, '--ui-alpha'));
-      root.style.setProperty(`${prop}-solid`, val);
-    };
-
     const styleKey = state.paletteStyle || 'classic';
     const style = PALETTE_STYLES[styleKey] || PALETTE_STYLES.classic;
 
@@ -795,37 +791,45 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isMonochrome = intensityFactor < 0.08 || (styleKey === 'neutral' && intensityFactor < 0.05);
     const br = (typeof brightness === 'number' ? brightness : 50) / 100;
 
+    const isDefaultKoi = hexColor.toLowerCase() === '#dc4b2f';
+
     if (mode === 'light') {
       const LB = (v) => Math.max(0, Math.min(100, Math.round(v + (br - 0.5) * 24)));
-      if (isMonochrome) {
-        setToken('--md-sys-color-primary', '#dc4b2f');
-        setToken('--md-sys-color-on-primary', '#ffffff');
-        setToken('--md-sys-color-secondary', '#e5a93b');
-        setToken('--md-sys-color-background', '#0b1413');
-        setToken('--md-sys-color-surface', '#0f1a18');
-        setToken('--md-sys-color-surface-container', '#162a26');
-        setToken('--md-sys-color-on-surface', '#f2ede4');
-        setToken('--md-sys-color-on-surface-variant', '#b3c5c0');
-        setToken('--md-sys-color-outline', '#2f544b');
-      } else {
-        const sat = Math.min(100, Math.round(60 * intensityFactor * style.priSatScale));
-        const satHi = Math.min(100, Math.round(60 * intensityFactor * style.contSatScale));
-        const satMed = Math.min(100, Math.round(50 * intensityFactor * style.priSatScale));
-        const satLow = Math.min(100, Math.round(15 * intensityFactor * style.contSatScale));
-        const satLow2 = Math.min(100, Math.round(30 * intensityFactor * style.contSatScale));
-        const surfFactor = intensityFactor * style.surfSatScale;
-        const priHex = hslToHex(h, sat, 75);
-        const priRgb = hexToRgb(priHex);
-        setToken('--md-sys-color-primary', priHex);
-        setToken('--md-sys-color-on-primary', hslToHex(h, satMed, 20));
-        setToken('--md-sys-color-primary-container', `rgba(${priRgb.r}, ${priRgb.g}, ${priRgb.b}, 0.18)`);
-        setToken('--md-sys-color-on-primary-container', priHex);
-        setToken('--md-sys-color-secondary', hslToHex(hSec, satLow2, 75));
-        setToken('--md-sys-color-secondary-container', hslToHex(hSec, satLow, 22));
-        setToken('--md-sys-color-on-secondary-container', hslToHex(hSec, satLow2, 85));
-        setToken('--md-sys-color-tertiary', hslToHex(hTert, satLow2, 75));
-        setToken('--md-sys-color-tertiary-container', hslToHex(hTert, satLow, 22));
-        // Japanese Zen Koi Pond Theme Palette
+      const sat = Math.min(100, Math.round(60 * (intensityFactor > 0 ? intensityFactor : 0.5) * style.priSatScale));
+      const satMed = Math.min(100, Math.round(50 * (intensityFactor > 0 ? intensityFactor : 0.4) * style.priSatScale));
+      const satLow = Math.min(100, Math.round(15 * (intensityFactor > 0 ? intensityFactor : 0.3) * style.contSatScale));
+      const satLow2 = Math.min(100, Math.round(30 * (intensityFactor > 0 ? intensityFactor : 0.4) * style.contSatScale));
+      const surfFactor = (intensityFactor > 0 ? intensityFactor : 0.3) * style.surfSatScale;
+      const priHex = hexColor || hslToHex(h, sat, 45);
+      const priRgb = hexToRgb(priHex);
+
+      setToken('--md-sys-color-primary', priHex);
+      setToken('--md-sys-color-on-primary', '#ffffff');
+      setToken('--md-sys-color-primary-container', `rgba(${priRgb.r}, ${priRgb.g}, ${priRgb.b}, 0.16)`);
+      setToken('--md-sys-color-on-primary-container', priHex);
+      setToken('--md-sys-color-secondary', hslToHex(hSec, satLow2, 45));
+      setToken('--md-sys-color-secondary-container', hslToHex(hSec, satLow, 90));
+      setToken('--md-sys-color-on-secondary-container', hslToHex(hSec, satLow2, 20));
+      setToken('--md-sys-color-tertiary', hslToHex(hTert, satLow2, 45));
+      setToken('--md-sys-color-tertiary-container', hslToHex(hTert, satLow, 90));
+
+      setToken('--md-sys-color-background', hslToHex(h, Math.round(20 * surfFactor), LB(98)));
+      setToken('--md-sys-color-surface', hslToHex(h, Math.round(20 * surfFactor), LB(96)));
+      setToken('--md-sys-color-surface-dim', hslToHex(h, Math.round(20 * surfFactor), LB(92)));
+      setToken('--md-sys-color-surface-bright', hslToHex(h, Math.round(20 * surfFactor), LB(99)));
+      setToken('--md-sys-color-surface-container-lowest', '#ffffff');
+      setToken('--md-sys-color-surface-container-low', hslToHex(h, Math.round(20 * surfFactor), LB(94)));
+      setToken('--md-sys-color-surface-container', hslToHex(h, Math.round(20 * surfFactor), LB(90)));
+      setToken('--md-sys-color-surface-container-high', hslToHex(h, Math.round(20 * surfFactor), LB(86)));
+      setToken('--md-sys-color-surface-container-highest', hslToHex(h, Math.round(20 * surfFactor), LB(82)));
+      setToken('--md-sys-color-on-surface', '#1c1b1f');
+      setToken('--md-sys-color-on-surface-variant', '#49454f');
+      setToken('--md-sys-color-outline', hslToHex(h, Math.round(20 * surfFactor), 60));
+      setToken('--md-sys-color-outline-variant', hslToHex(h, Math.round(20 * surfFactor), 80));
+    } else {
+      // Dark mode (Default)
+      if (isDefaultKoi && isMonochrome) {
+        // Japanese Zen Koi Pond Theme Palette (Default preset)
         setToken('--md-sys-color-primary', '#dc4b2f');
         setToken('--md-sys-color-on-primary', '#ffffff');
         setToken('--md-sys-color-primary-container', '#4a160d');
@@ -848,6 +852,40 @@ document.addEventListener('DOMContentLoaded', async () => {
         setToken('--md-sys-color-on-surface-variant', '#b3c5c0');
         setToken('--md-sys-color-outline', '#2f544b');
         setToken('--md-sys-color-outline-variant', '#1c3630');
+      } else {
+        // Dynamic Material 3 Palette based on user-selected color & sliders
+        const sat = Math.min(100, Math.round(75 * (intensityFactor > 0 ? intensityFactor : 0.6) * style.priSatScale));
+        const satMed = Math.min(100, Math.round(50 * (intensityFactor > 0 ? intensityFactor : 0.5) * style.priSatScale));
+        const satLow = Math.min(100, Math.round(20 * (intensityFactor > 0 ? intensityFactor : 0.35) * style.contSatScale));
+        const satLow2 = Math.min(100, Math.round(35 * (intensityFactor > 0 ? intensityFactor : 0.45) * style.contSatScale));
+        const surfFactor = (intensityFactor > 0 ? intensityFactor : 0.35) * style.surfSatScale;
+        const priHex = hexColor || hslToHex(h, sat, 75);
+        const priRgb = hexToRgb(priHex);
+
+        setToken('--md-sys-color-primary', priHex);
+        setToken('--md-sys-color-on-primary', hslToHex(h, satMed, 18));
+        setToken('--md-sys-color-primary-container', `rgba(${priRgb.r}, ${priRgb.g}, ${priRgb.b}, 0.22)`);
+        setToken('--md-sys-color-on-primary-container', hslToHex(h, satMed, 88));
+        setToken('--md-sys-color-secondary', hslToHex(hSec, satLow2, 75));
+        setToken('--md-sys-color-secondary-container', hslToHex(hSec, satLow, 22));
+        setToken('--md-sys-color-on-secondary-container', hslToHex(hSec, satLow2, 85));
+        setToken('--md-sys-color-tertiary', hslToHex(hTert, satLow2, 75));
+        setToken('--md-sys-color-tertiary-container', hslToHex(hTert, satLow, 22));
+
+        const DB = (baseL) => Math.max(2, Math.min(45, Math.round(baseL + (br - 0.5) * 16)));
+        setToken('--md-sys-color-background', hslToHex(h, Math.round(18 * surfFactor), DB(6)));
+        setToken('--md-sys-color-surface', hslToHex(h, Math.round(18 * surfFactor), DB(9)));
+        setToken('--md-sys-color-surface-dim', hslToHex(h, Math.round(18 * surfFactor), DB(6)));
+        setToken('--md-sys-color-surface-bright', hslToHex(h, Math.round(20 * surfFactor), DB(22)));
+        setToken('--md-sys-color-surface-container-lowest', hslToHex(h, Math.round(18 * surfFactor), DB(4)));
+        setToken('--md-sys-color-surface-container-low', hslToHex(h, Math.round(18 * surfFactor), DB(11)));
+        setToken('--md-sys-color-surface-container', hslToHex(h, Math.round(20 * surfFactor), DB(14)));
+        setToken('--md-sys-color-surface-container-high', hslToHex(h, Math.round(22 * surfFactor), DB(18)));
+        setToken('--md-sys-color-surface-container-highest', hslToHex(h, Math.round(24 * surfFactor), DB(24)));
+        setToken('--md-sys-color-on-surface', hslToHex(h, 8, 93));
+        setToken('--md-sys-color-on-surface-variant', hslToHex(h, 12, 74));
+        setToken('--md-sys-color-outline', hslToHex(h, Math.round(22 * surfFactor), 35));
+        setToken('--md-sys-color-outline-variant', hslToHex(h, Math.round(22 * surfFactor), 22));
       }
     }
   }
@@ -1320,36 +1358,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const mono = intensity < 8;
     updateMeshGradient(mono ? '#9E9E9E' : hexColor, mono ? '#757575' : resolvedAccent2, mode);
-    
-    const rootStyle = document.documentElement.style;
-    rootStyle.setProperty('--md-sys-color-primary', '#dc4b2f');
-    rootStyle.setProperty('--md-sys-color-on-primary', '#ffffff');
-    rootStyle.setProperty('--md-sys-color-primary-container', '#4a160d');
-    rootStyle.setProperty('--md-sys-color-on-primary-container', '#ffdacf');
-    rootStyle.setProperty('--md-sys-color-secondary', '#e5a93b');
-    rootStyle.setProperty('--md-sys-color-secondary-container', '#24423b');
-    rootStyle.setProperty('--md-sys-color-on-secondary-container', '#d1f0e8');
-    rootStyle.setProperty('--md-sys-color-tertiary', '#e5a93b');
-    rootStyle.setProperty('--md-sys-color-tertiary-container', '#462817');
-    rootStyle.setProperty('--md-sys-color-background', '#0b1413');
-    rootStyle.setProperty('--md-sys-color-background-solid', '#0b1413');
-    rootStyle.setProperty('--md-sys-color-surface', '#0f1a18');
-    rootStyle.setProperty('--md-sys-color-surface-solid', '#0f1a18');
-    rootStyle.setProperty('--md-sys-color-surface-dim', '#0b1413');
-    rootStyle.setProperty('--md-sys-color-surface-bright', '#243d37');
-    rootStyle.setProperty('--md-sys-color-surface-container-lowest', '#070e0d');
-    rootStyle.setProperty('--md-sys-color-surface-container-low', '#12201d');
-    rootStyle.setProperty('--md-sys-color-surface-container', '#162a26');
-    rootStyle.setProperty('--md-sys-color-surface-container-solid', '#162a26');
-    rootStyle.setProperty('--md-sys-color-surface-container-high', '#1e3833');
-    rootStyle.setProperty('--md-sys-color-surface-container-highest', '#284841');
-    rootStyle.setProperty('--md-sys-color-on-surface', '#f2ede4');
-    rootStyle.setProperty('--md-sys-color-on-surface-variant', '#b3c5c0');
-    rootStyle.setProperty('--md-sys-color-outline', '#2f544b');
-    rootStyle.setProperty('--md-sys-color-outline-variant', '#1c3630');
-    rootStyle.setProperty('--btn-primary-bg', '#dc4b2f');
-    rootStyle.setProperty('--btn-primary-fg', '#ffffff');
-    rootStyle.setProperty('--btn-primary-hover', '#f05537');
     
     refreshCachedThemeColors();
   }
@@ -2124,6 +2132,88 @@ document.addEventListener('DOMContentLoaded', async () => {
     let freqData = bufferLength > 0 ? new Uint8Array(bufferLength) : null;
 
     
+  // Material 3 Classic Squiggly Wavy Scrubber Engine
+  // ==========================================================================
+  function drawClassicWaveScrubber(ctx, w, h, progress, phase, isPlaying, isDragging, knobAnim) {
+    try {
+      const centerY = Math.round(h / 2);
+      const isMiniLayout = document.body.classList.contains('mini');
+      const padLeft = 5.5;
+      const padRight = 5.5;
+      const trackWidth = Math.max(10, w - padLeft - padRight);
+      const safeProgress = Math.max(0, Math.min(1, Number.isFinite(progress) ? progress : 0));
+      const knobCenterX = padLeft + safeProgress * trackWidth;
+
+      const priColor = cachedPrimaryColor || '#dc4b2f';
+      const dimColor = cachedDimColor || 'rgba(255, 255, 255, 0.22)';
+
+      if (isMiniLayout) {
+        ctx.save();
+        ctx.lineCap = 'round';
+        ctx.lineWidth = 3.0;
+
+        ctx.strokeStyle = priColor;
+        ctx.beginPath();
+        ctx.moveTo(padLeft, centerY);
+        ctx.lineTo(knobCenterX, centerY);
+        ctx.stroke();
+
+        ctx.strokeStyle = dimColor;
+        ctx.beginPath();
+        ctx.moveTo(knobCenterX, centerY);
+        ctx.lineTo(w - padRight, centerY);
+        ctx.stroke();
+        ctx.restore();
+        return;
+      }
+
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.lineWidth = 4.0;
+
+      // 1. Played portion: squiggly wave (or straight line when paused or dragging)
+      const targetAmp = (isPlaying && !isDragging) ? 5.5 : 0;
+      smoothAmplitude += (targetAmp - smoothAmplitude) * 0.18;
+      const k = (2 * Math.PI) / 42;
+
+      ctx.strokeStyle = priColor;
+      ctx.beginPath();
+      ctx.moveTo(padLeft, centerY);
+      for (let x = padLeft; x <= knobCenterX; x += 1.5) {
+        const y = centerY + smoothAmplitude * Math.sin(k * x - phase);
+        ctx.lineTo(x, y);
+      }
+      ctx.lineTo(knobCenterX, centerY);
+      ctx.stroke();
+
+      // 2. Unplayed portion: smooth straight track line
+      ctx.strokeStyle = dimColor;
+      ctx.beginPath();
+      ctx.moveTo(knobCenterX, centerY);
+      ctx.lineTo(w - padRight, centerY);
+      ctx.stroke();
+
+      // 3. Knob pill indicator with subtle drop shadow
+      const kAnim = typeof knobAnim === 'number' ? knobAnim : (isDragging ? 1 : 0);
+      const curKnobW = 7.5 + (9.0 - 7.5) * kAnim;
+      const curKnobH = 22 + (30 - 22) * kAnim;
+      const curKnobR = curKnobW / 2;
+
+      ctx.fillStyle = priColor;
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+      ctx.shadowBlur = 6;
+      ctx.shadowOffsetY = 1;
+
+      ctx.beginPath();
+      ctx.roundRect(knobCenterX - curKnobW / 2, centerY - curKnobH / 2, curKnobW, curKnobH, curKnobR);
+      ctx.fill();
+
+      ctx.restore();
+    } catch (err) {
+      console.warn('Classic scrubber render error:', err);
+    }
+  }
+
   // Japanese Zen Koi Pond - 2D Canvas Koi Fish Rendering Engine
   // ==========================================================================
   // JAPANESE ZEN KOI POND - WATER CAPSULE & SWIMMING KOI SCRUBBER ENGINE
@@ -2645,8 +2735,12 @@ document.addEventListener('DOMContentLoaded', async () => {
           scrubPhase += 1.0 * dt; // Gentle pond breathing when paused
         }
 
-        // Render Japanese Zen Koi Pond Water Capsule Scrubber
-        drawKoiWaterCapsuleScrubber(sCtx, sw, sh, scrubProgress, scrubPhase, state.isPlaying, isDraggingScrubber);
+        // Render Selected Scrubber (Classic wave vs Japanese Koi fish)
+        if (state.scrubberStyle === 'classic') {
+          drawClassicWaveScrubber(sCtx, sw, sh, scrubProgress, scrubPhase, state.isPlaying, isDraggingScrubber, scrubKnobAnim);
+        } else {
+          drawKoiWaterCapsuleScrubber(sCtx, sw, sh, scrubProgress, scrubPhase, state.isPlaying, isDraggingScrubber);
+        }
       }
     }
     renderLoop(0);
@@ -3145,17 +3239,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     state.currentTrackIndexInContext = startIndex;
 
     if (queueList) {
-      state.queue = [...queueList];
-      if (startIndex >= 0 && startIndex < state.queue.length && isSameTrack(state.queue[startIndex], track)) {
-        state.queueIndex = startIndex;
-      } else {
-        state.queueIndex = state.queue.findIndex(t => isSameTrack(t, track));
-      }
-      if (state.queueIndex === -1) {
-        state.queue.unshift(track);
+      if (state.isShuffle && queueList.length > 1) {
+        const remaining = queueList.filter(t => !isSameTrack(t, track));
+        state.queue = [track, ...fisherYatesShuffle(remaining)];
         state.queueIndex = 0;
+        state.queueHistory = [0];
+      } else {
+        state.queue = [...queueList];
+        if (startIndex >= 0 && startIndex < state.queue.length && isSameTrack(state.queue[startIndex], track)) {
+          state.queueIndex = startIndex;
+        } else {
+          state.queueIndex = state.queue.findIndex(t => isSameTrack(t, track));
+        }
+        if (state.queueIndex === -1) {
+          state.queue.unshift(track);
+          state.queueIndex = 0;
+        }
+        state.queueHistory = [state.queueIndex];
       }
-      state.queueHistory = [state.queueIndex];
+      renderQueueView();
     } else {
       const existingIndex = state.queue.findIndex(t => isSameTrack(t, track));
       if (existingIndex === -1) {
@@ -5350,10 +5452,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (state.isShuffle) {
-      const nextIdx = Math.floor(Math.random() * state.queue.length);
+      let nextIdx = state.queueIndex + 1;
+      if (nextIdx >= state.queue.length) {
+        if (state.queue.length > 1) {
+          state.queue = fisherYatesShuffle(state.queue);
+        }
+        nextIdx = 0;
+      }
       state.queueIndex = nextIdx;
       recordPlayedIndex(nextIdx);
       playTrack(state.queue[nextIdx]);
+      renderQueueView();
       return;
     }
 
@@ -6027,6 +6136,13 @@ document.addEventListener('DOMContentLoaded', async () => {
           state.queue.push(cand);
         }
       }
+      if (state.isShuffle && state.queue.length > 1) {
+        const cur = state.queue[state.queueIndex >= 0 ? state.queueIndex : 0];
+        const rem = state.queue.filter((_, idx) => idx !== (state.queueIndex >= 0 ? state.queueIndex : 0));
+        state.queue = [cur, ...fisherYatesShuffle(rem)];
+        state.queueIndex = 0;
+        state.queueHistory = [0];
+      }
       updateQueueBadge();
       if (state.currentView === 'queue') renderQueueView();
 
@@ -6040,12 +6156,91 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   let currentAlbumRunId = 0;
 
+  
+  let currentViewingAlbum = null;
+
+  function updateAlbumFavButton(album) {
+    const btn = document.getElementById('btn-fav-album');
+    if (!btn || !album) return;
+    const albumPlId = 'album_' + album.id;
+    const isFav = isPlaylistFavorited(albumPlId) || isPlaylistFavorited(album.id);
+    const priColor = getComputedStyle(document.documentElement).getPropertyValue('--md-sys-color-primary').trim() || '#dc4b2f';
+    const svg = btn.querySelector('svg');
+    const path = svg ? svg.querySelector('path') : null;
+
+    btn.classList.toggle('active', isFav);
+    btn.style.color = isFav ? priColor : '';
+    if (svg) {
+      svg.style.color = isFav ? priColor : '';
+      svg.style.fill = isFav ? priColor : 'none';
+      svg.style.stroke = isFav ? priColor : 'currentColor';
+      svg.setAttribute('fill', isFav ? priColor : 'none');
+      svg.setAttribute('stroke', isFav ? priColor : 'currentColor');
+    }
+    if (path) {
+      path.style.fill = isFav ? priColor : 'none';
+      path.style.stroke = isFav ? priColor : 'currentColor';
+      path.setAttribute('fill', isFav ? priColor : 'none');
+      path.setAttribute('stroke', isFav ? priColor : 'currentColor');
+    }
+    btn.title = isFav ? 'Remove from favorite playlists' : 'Favorite playlist';
+  }
+
+  function toggleFavoriteAlbum(album) {
+    if (!album) return;
+    const albumPlId = 'album_' + album.id;
+    let list = getFavoritePlaylistIds().map(String);
+    const idx = list.indexOf(albumPlId);
+    let isFav = false;
+
+    if (idx >= 0) {
+      list.splice(idx, 1);
+      isFav = false;
+    } else {
+      list.push(albumPlId);
+      isFav = true;
+
+      // Ensure album is registered in state.playlists so it shows up in Favorite Playlists grid
+      let existingPl = (state.playlists || []).find(p => p.id === albumPlId);
+      if (!existingPl) {
+        const tracks = (album._tracks || []).map((t, idx) => ({
+          id: `${album.id}_${t.disc || 1}_${t.no || (idx + 1)}`,
+          title: t.title,
+          artist: t.artist || album.artist,
+          duration: Math.round((t.durationMs || 0) / 1000),
+          cover: album.cover,
+          thumbnail: album.cover,
+          platform: 'youtube'
+        }));
+        state.playlists.push({
+          id: albumPlId,
+          name: album.title || 'Album',
+          cover: album.cover || '',
+          tracks: tracks
+        });
+        localStorage.setItem('devsize_playlists', JSON.stringify(state.playlists));
+        renderPlaylistsList();
+      }
+    }
+
+    localStorage.setItem('riff_favorite_playlists', JSON.stringify(list));
+    updateAlbumFavButton(album);
+    renderFavoritePlaylistsGrid();
+    renderFavoritesView();
+    if (typeof showToast === 'function') {
+      const name = album.title || 'Playlist';
+      showToast(isFav ? `Added "${name}" to favorite playlists` : `Removed "${name}" from favorites`);
+    }
+  }
+
   async function openAlbum(album) {
     if (!album || !album.id) return;
     const runId = ++currentAlbumRunId;
 
     state.previousView = state.currentView;
+    currentViewingAlbum = album;
     switchView('album');
+    updateAlbumFavButton(album);
 
     const coverEl = document.getElementById('album-detail-cover');
     if (coverEl) {
@@ -6131,6 +6326,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       album._tracks = tracks;
+      updateAlbumFavButton(album);
 
       const playAlbumBtn = document.getElementById('btn-play-album');
       if (playAlbumBtn) {
@@ -6405,6 +6601,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function createTrackRow(track, idx, currentCanonicalId, context, tracks, container) {
       const row = document.createElement('div');
+      row.__track = track;
       row.className = 'track-row';
       row.tabIndex = 0;
       const canonicalId = getTrackCanonicalId(track);
@@ -6453,8 +6650,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       </div>
       <span class="track-row-duration">${formatDuration(track.duration)}</span>
       <div class="track-row-actions">
-      <button class="btn-icon-pill btn-row-fav" title="favorite">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
+      <button class="btn-icon-pill btn-row-fav ${isFav ? 'active' : ''}" title="${isFav ? 'Remove from favorites' : 'Add to favorites'}">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="${isFav ? 'var(--md-sys-color-primary, #dc4b2f)' : 'none'}" stroke="${isFav ? 'var(--md-sys-color-primary, #dc4b2f)' : 'currentColor'}" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
       </button>
       <button class="btn-icon-pill btn-row-art" title="Customize cover & banner">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
@@ -6537,9 +6734,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           btnFav.addEventListener('click', (e) => {
             e.stopPropagation();
             toggleFavoriteTrack(track);
-            const isFavNow = state.favorites.some(f => isSameTrack(f, track));
-            const svg = btnFav.querySelector('svg');
-            if (svg) svg.setAttribute('fill', isFavNow ? 'currentColor' : 'none');
           });
         }
 
@@ -7006,27 +7200,92 @@ document.addEventListener('DOMContentLoaded', async () => {
   function toggleFavoriteTrack(track) {
     if (!track) return;
     const exists = state.favorites.some(f => isSameTrack(f, track));
-    
+    let isFav = false;
+
     if (exists) {
       state.favorites = state.favorites.filter(f => !isSameTrack(f, track));
+      isFav = false;
     } else {
       state.favorites.unshift(stampAddedAt(track));
+      isFav = true;
     }
-    
+
     localStorage.setItem('devsize_favorites', JSON.stringify(state.favorites));
     updateFavoritesBadge();
     updateFavoriteIcon();
+
+    // Update all matching track rows currently rendered in DOM
+    document.querySelectorAll('.track-row').forEach(row => {
+      if (row.__track && isSameTrack(row.__track, track)) {
+        const btnFav = row.querySelector('.btn-row-fav');
+        if (btnFav) {
+          btnFav.classList.toggle('active', isFav);
+          btnFav.title = isFav ? 'Remove from favorites' : 'Add to favorites';
+          const svg = btnFav.querySelector('svg');
+          if (svg) {
+            svg.setAttribute('fill', isFav ? 'var(--md-sys-color-primary, #dc4b2f)' : 'none');
+            svg.setAttribute('stroke', isFav ? 'var(--md-sys-color-primary, #dc4b2f)' : 'currentColor');
+          }
+        }
+      }
+    });
+
     if (state.currentView === 'favorites') renderFavoritesView();
+
+    if (typeof showToast === 'function') {
+      const name = track.title || 'Track';
+      showToast(isFav ? `Added "${name}" to favorites` : `Removed "${name}" from favorites`, 'info');
+    }
   }
 
   function updateFavoriteIcon() {
     if (!el.favIcon) return;
+    const btn = el.btnToggleFav;
+    const svg = el.favIcon;
+    const path = svg ? svg.querySelector('path') : null;
+    const priColor = getComputedStyle(document.documentElement).getPropertyValue('--md-sys-color-primary').trim() || '#dc4b2f';
+
     if (!state.currentTrack) {
-      el.favIcon.setAttribute('fill', 'none');
+      if (btn) {
+        btn.classList.remove('active');
+        btn.style.color = '';
+        btn.title = 'Add to favorites';
+      }
+      if (svg) {
+        svg.style.color = '';
+        svg.style.fill = 'none';
+        svg.style.stroke = 'currentColor';
+        svg.setAttribute('fill', 'none');
+        svg.setAttribute('stroke', 'currentColor');
+      }
+      if (path) {
+        path.style.fill = 'none';
+        path.style.stroke = 'currentColor';
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', 'currentColor');
+      }
       return;
     }
+
     const isFav = state.favorites.some(f => isSameTrack(f, state.currentTrack));
-    el.favIcon.setAttribute('fill', isFav ? 'currentColor' : 'none');
+    if (btn) {
+      btn.classList.toggle('active', isFav);
+      btn.style.color = isFav ? priColor : '';
+      btn.title = isFav ? 'Remove from favorites' : 'Add to favorites';
+    }
+    if (svg) {
+      svg.style.color = isFav ? priColor : '';
+      svg.style.fill = isFav ? priColor : 'none';
+      svg.style.stroke = isFav ? priColor : 'currentColor';
+      svg.setAttribute('fill', isFav ? priColor : 'none');
+      svg.setAttribute('stroke', isFav ? priColor : 'currentColor');
+    }
+    if (path) {
+      path.style.fill = isFav ? priColor : 'none';
+      path.style.stroke = isFav ? priColor : 'currentColor';
+      path.setAttribute('fill', isFav ? priColor : 'none');
+      path.setAttribute('stroke', isFav ? priColor : 'currentColor');
+    }
   }
 
   function updateFavoritesBadge() {
@@ -7062,6 +7321,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (el.favoritesSort) el.favoritesSort.value = getTrackSortMode('favorites');
     if (el.favoritesSubtitle) el.favoritesSubtitle.textContent = query ? `${filtered.length} of ${state.favorites.length} tracks` : `${state.favorites.length} tracks saved`;
     if (el.favoritesTracksList) renderTracks(el.favoritesTracksList, filtered, 'favorites');
+    renderFavoritePlaylistsGrid();
   }
 
   if (el.favoritesSearchInput) {
@@ -7308,43 +7568,66 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function isPlaylistFavorited(id) {
     if (!id) return false;
-    const list = getFavoritePlaylistIds();
-    return list.includes(id);
+    const list = getFavoritePlaylistIds().map(String);
+    return list.includes(String(id));
   }
 
   function toggleFavoritePlaylist(playlistId) {
+    if (!playlistId) playlistId = state.currentPlaylistId;
     if (!playlistId) return;
-    let list = getFavoritePlaylistIds();
-    const idx = list.indexOf(playlistId);
+    let list = getFavoritePlaylistIds().map(String);
+    const targetId = String(playlistId);
+    const idx = list.indexOf(targetId);
     let isFav = false;
     if (idx >= 0) {
       list.splice(idx, 1);
       isFav = false;
     } else {
-      list.push(playlistId);
+      list.push(targetId);
       isFav = true;
     }
     localStorage.setItem('riff_favorite_playlists', JSON.stringify(list));
-    updatePlaylistFavButton(playlistId);
+    updatePlaylistFavButton(targetId);
+    renderFavoritePlaylistsGrid();
     renderFavoritesView();
     if (typeof showToast === 'function') {
-      const pl = (state.playlists || []).find(p => p.id === playlistId);
+      const pl = (state.playlists || []).find(p => String(p.id) === targetId || p.name === targetId);
       const name = pl ? pl.name : 'Playlist';
-      showToast(isFav ? `Added "${name}" to favorites` : `Removed "${name}" from favorites`);
+      showToast(isFav ? `Added "${name}" to favorite playlists` : `Removed "${name}" from favorites`);
     }
   }
 
   function updatePlaylistFavButton(playlistId) {
-    const btn = document.getElementById('btn-fav-playlist');
-    if (!btn) return;
-    const isFav = isPlaylistFavorited(playlistId || state.currentPlaylistId);
-    const svg = btn.querySelector('svg');
-    if (svg) {
-      svg.setAttribute('fill', isFav ? '#dc4b2f' : 'none');
-      svg.setAttribute('stroke', isFav ? '#dc4b2f' : 'currentColor');
-    }
-    btn.classList.toggle('active', isFav);
-    btn.title = isFav ? 'Remove from favorite playlists' : 'Favorite playlist';
+    const targetId = playlistId || state.currentPlaylistId;
+    if (!targetId) return;
+    const isFav = isPlaylistFavorited(targetId);
+    const priColor = getComputedStyle(document.documentElement).getPropertyValue('--md-sys-color-primary').trim() || '#dc4b2f';
+
+    const buttons = [
+      document.getElementById('btn-fav-playlist'),
+      document.getElementById('btn-fav-all-playlist')
+    ].filter(Boolean);
+
+    buttons.forEach(btn => {
+      btn.classList.toggle('active', isFav);
+      btn.style.color = isFav ? priColor : '';
+      const svg = btn.querySelector('svg');
+      const path = svg ? svg.querySelector('path') : null;
+      if (svg) {
+        svg.style.color = isFav ? priColor : '';
+        svg.style.fill = isFav ? priColor : 'none';
+        svg.style.stroke = isFav ? priColor : 'currentColor';
+        svg.setAttribute('fill', isFav ? priColor : 'none');
+        svg.setAttribute('stroke', isFav ? priColor : 'currentColor');
+      }
+      if (path) {
+        path.style.fill = isFav ? priColor : 'none';
+        path.style.stroke = isFav ? priColor : 'currentColor';
+        path.setAttribute('fill', isFav ? priColor : 'none');
+        path.setAttribute('stroke', isFav ? priColor : 'currentColor');
+      }
+      btn.title = isFav ? 'Remove from favorite playlists' : 'Favorite playlist';
+    });
   }
 
   function renderFavoritePlaylistsGrid() {
@@ -7352,9 +7635,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const countEl = document.getElementById('fav-playlists-count');
     if (!grid) return;
 
-    const favIds = getFavoritePlaylistIds();
+    const favIds = getFavoritePlaylistIds().map(String);
     const allPlaylists = state.playlists || [];
-    const favPlaylists = allPlaylists.filter(p => p && favIds.includes(p.id));
+    const favPlaylists = allPlaylists.filter(p => p && favIds.includes(String(p.id)));
 
     if (countEl) countEl.textContent = `${favPlaylists.length} playlist${favPlaylists.length === 1 ? '' : 's'}`;
 
@@ -7393,9 +7676,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const heartBadge = document.createElement('div');
       heartBadge.className = 'fav-pl-heart-badge';
+      heartBadge.title = 'Remove from favorite playlists';
       heartBadge.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="#dc4b2f" stroke="#dc4b2f" stroke-width="2">
         <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
       </svg>`;
+      heartBadge.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleFavoritePlaylist(pl.id);
+      });
 
       card.appendChild(coverWrap);
       card.appendChild(heartBadge);
@@ -7781,6 +8069,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
     if (el.playlistTracksList) renderTracks(el.playlistTracksList, filtered, 'playlist');
+    updatePlaylistFavButton(playlistId);
     switchView('playlist-detail');
     renderPlaylistsList();
   }
@@ -7791,29 +8080,35 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (state.currentPlaylistId) openPlaylistDetail(state.currentPlaylistId);
     });
   }
-  (function setupFavAllPlaylist() {
-    const btn = document.getElementById('btn-fav-all-playlist');
-    if (!btn) return;
-    btn.addEventListener('click', () => {
-      const pl = state.playlists.find(p => p.id === state.currentPlaylistId);
-      if (!pl || !pl.tracks) return;
-      let added = 0;
-      for (let i = pl.tracks.length - 1; i >= 0; i--) {
-        const track = pl.tracks[i];
-        if (!state.favorites.some(f => isSameTrack(f, track))) {
-          state.favorites.unshift(track);
-          added++;
-        }
+  const btnFavPlaylist = document.getElementById('btn-fav-playlist');
+  if (btnFavPlaylist) {
+    btnFavPlaylist.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (state.currentPlaylistId) {
+        toggleFavoritePlaylist(state.currentPlaylistId);
       }
-      localStorage.setItem('devsize_favorites', JSON.stringify(state.favorites));
-      updateFavoritesBadge();
-      updateFavoriteIcon();
-      btn.title = added + ' added to favorites';
-      const old = btn.style.color;
-      btn.style.color = '#ff6b8a';
-      setTimeout(() => { btn.style.color = old; btn.title = 'Add all to favorites'; }, 2500);
     });
-  })();
+  }
+
+  const btnFavAlbum = document.getElementById('btn-fav-album');
+  if (btnFavAlbum) {
+    btnFavAlbum.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (currentViewingAlbum) {
+        toggleFavoriteAlbum(currentViewingAlbum);
+      }
+    });
+  }
+
+  const btnFavAllPlaylist = document.getElementById('btn-fav-all-playlist');
+  if (btnFavAllPlaylist) {
+    btnFavAllPlaylist.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (state.currentPlaylistId) {
+        toggleFavoritePlaylist(state.currentPlaylistId);
+      }
+    });
+  }
 
   // ==========================================================================
   // DEDICATED RENAME PLAYLIST MODAL ENGINE
@@ -9060,6 +9355,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       state.isShuffle = !state.isShuffle;
       localStorage.setItem('riff_shuffle', state.isShuffle ? '1' : '0');
       el.btnShuffle.classList.toggle('active', state.isShuffle);
+      if (state.isShuffle && state.queue && state.queue.length > 1) {
+        const curIdx = state.queueIndex >= 0 ? state.queueIndex : 0;
+        const current = state.queue[curIdx];
+        const remaining = state.queue.filter((_, idx) => idx !== curIdx);
+        state.queue = [current, ...fisherYatesShuffle(remaining)];
+        state.queueIndex = 0;
+        state.queueHistory = [0];
+        renderQueueView();
+      }
     });
   }
 
@@ -9741,6 +10045,46 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.addEventListener('click', () => {
       searchPosDropdown.classList.remove('open');
+    });
+  }
+
+  // Scrubber Style (Koi fish vs Classic wave) Dropdown
+  const scrubberStyleDropdown = document.getElementById('scrubber-style-dropdown');
+  const scrubberStyleTrigger = document.getElementById('scrubber-style-trigger');
+  const scrubberStyleMenu = document.getElementById('scrubber-style-menu');
+  const scrubberStyleLabel = document.getElementById('scrubber-style-label');
+  const selectScrubberStyle = document.getElementById('select-scrubber-style');
+
+  if (scrubberStyleDropdown && scrubberStyleTrigger && scrubberStyleMenu) {
+    const curStyle = state.scrubberStyle || 'koi';
+    if (scrubberStyleLabel) scrubberStyleLabel.textContent = curStyle === 'classic' ? 'Classic wave' : 'Koi fish';
+    if (selectScrubberStyle) selectScrubberStyle.value = curStyle;
+    scrubberStyleMenu.querySelectorAll('.m3-dropdown-option').forEach(opt => {
+      opt.classList.toggle('selected', opt.dataset.value === curStyle);
+    });
+
+    scrubberStyleTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      scrubberStyleDropdown.classList.toggle('open');
+    });
+
+    scrubberStyleMenu.querySelectorAll('.m3-dropdown-option').forEach(opt => {
+      opt.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const val = opt.dataset.value;
+        state.scrubberStyle = val;
+        localStorage.setItem('tamago_scrubber_style', val);
+        if (scrubberStyleLabel) scrubberStyleLabel.textContent = opt.textContent.trim();
+        if (selectScrubberStyle) selectScrubberStyle.value = val;
+        scrubberStyleMenu.querySelectorAll('.m3-dropdown-option').forEach(o => o.classList.toggle('selected', o === opt));
+        scrubberStyleDropdown.classList.remove('open');
+        hasDrawnPausedFrame = false;
+        if (!animationFrameId) startVisualizers();
+      });
+    });
+
+    document.addEventListener('click', () => {
+      scrubberStyleDropdown.classList.remove('open');
     });
   }
 
@@ -14083,9 +14427,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
     const shuffled = fisherYatesShuffle(pl.tracks);
-    state.isShuffle = false;
-    if (el.btnShuffle) el.btnShuffle.classList.remove('active');
-    localStorage.setItem('riff_shuffle', '0');
+    state.isShuffle = true;
+    if (el.btnShuffle) el.btnShuffle.classList.add('active');
+    localStorage.setItem('riff_shuffle', '1');
 
     playTrack(shuffled[0], shuffled, 0, 'playlist');
     renderQueueView();

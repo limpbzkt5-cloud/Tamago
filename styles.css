@@ -7615,30 +7615,66 @@ body.m3-cover-on .m3c-canvas { display: block; }
 body.m3-cover-on .artwork-wrapper { overflow: visible !important; background: transparent !important; }
 body.m3-cover-on .artwork-fallback { display: none !important; }
 
+.playlist-actions #btn-fav-playlist,
 .playlist-actions #btn-fav-all-playlist,
-.playlist-actions #btn-rename-playlist {
+.playlist-actions #btn-rename-playlist,
+.playlist-actions #btn-edit-playlist-cover,
+.playlist-actions #btn-delete-playlist {
   width: 44px !important;
   height: 44px !important;
   min-width: 44px !important;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--md-sys-color-surface-container-high);
-  color: var(--md-sys-color-on-surface);
-  border: none;
-  cursor: pointer;
-  transition: transform 0.15s ease, background 0.15s ease;
+  border-radius: 50% !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: var(--md-sys-color-surface-container-high) !important;
+  color: var(--md-sys-color-on-surface) !important;
+  border: none !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease !important;
 }
 
+.playlist-actions #btn-fav-playlist:hover,
 .playlist-actions #btn-fav-all-playlist:hover,
-.playlist-actions #btn-rename-playlist:hover {
-  background: var(--md-sys-color-surface-container-highest);
+.playlist-actions #btn-rename-playlist:hover,
+.playlist-actions #btn-edit-playlist-cover:hover,
+.playlist-actions #btn-delete-playlist:hover {
+  background: var(--md-sys-color-surface-container-highest) !important;
 }
 
+.playlist-actions #btn-fav-playlist:active,
 .playlist-actions #btn-fav-all-playlist:active,
-.playlist-actions #btn-rename-playlist:active {
-  transform: scale(0.92);
+.playlist-actions #btn-rename-playlist:active,
+.playlist-actions #btn-edit-playlist-cover:active,
+.playlist-actions #btn-delete-playlist:active {
+  transform: scale(0.92) !important;
+}
+
+#btn-fav-album {
+  width: 56px !important;
+  height: 56px !important;
+  min-width: 56px !important;
+  min-height: 56px !important;
+  border-radius: 50% !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: var(--md-sys-color-surface-container-high) !important;
+  color: var(--md-sys-color-on-surface) !important;
+  border: none !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease !important;
+}
+
+#btn-fav-album:hover {
+  background: var(--md-sys-color-surface-container-highest) !important;
+  transform: scale(1.04) !important;
+}
+
+#btn-fav-album:active {
+  transform: scale(0.92) !important;
 }
 
 .track-row-check {
@@ -7697,63 +7733,63 @@ body.multi-select-on .track-row.selectable .track-row-actions {
    JAPANESE ZEN KOI POND THEME OVERRIDES (CORE THEME)
    ========================================================================== */
 :root {
-  --md-sys-color-background-solid: #0b1413 !important;
-  --md-sys-color-background: #0b1413 !important;
-  --md-sys-color-surface-solid: #0f1a18 !important;
-  --md-sys-color-surface: #0f1a18 !important;
-  --md-sys-color-surface-container-solid: #162a26 !important;
-  --md-sys-color-surface-container: #162a26 !important;
-  --md-sys-color-surface-container-high: #1e3833 !important;
-  --md-sys-color-surface-container-highest: #284841 !important;
-  --md-sys-color-primary: #dc4b2f !important;
-  --md-sys-color-on-primary: #ffffff !important;
-  --md-sys-color-primary-container: #4a160d !important;
-  --md-sys-color-on-primary-container: #ffdacf !important;
-  --md-sys-color-secondary: #e5a93b !important;
-  --md-sys-color-secondary-container: #24423b !important;
-  --md-sys-color-on-secondary-container: #d1f0e8 !important;
-  --md-sys-color-outline: #2f544b !important;
-  --md-sys-color-outline-variant: #1c3630 !important;
-  --md-sys-color-on-surface: #f2ede4 !important;
-  --md-sys-color-on-surface-variant: #b3c5c0 !important;
-  --btn-primary-bg: #dc4b2f !important;
-  --btn-primary-fg: #ffffff !important;
+  --md-sys-color-background-solid: #0b1413;
+  --md-sys-color-background: #0b1413;
+  --md-sys-color-surface-solid: #0f1a18;
+  --md-sys-color-surface: #0f1a18;
+  --md-sys-color-surface-container-solid: #162a26;
+  --md-sys-color-surface-container: #162a26;
+  --md-sys-color-surface-container-high: #1e3833;
+  --md-sys-color-surface-container-highest: #284841;
+  --md-sys-color-primary: #dc4b2f;
+  --md-sys-color-on-primary: #ffffff;
+  --md-sys-color-primary-container: #4a160d;
+  --md-sys-color-on-primary-container: #ffdacf;
+  --md-sys-color-secondary: #e5a93b;
+  --md-sys-color-secondary-container: #24423b;
+  --md-sys-color-on-secondary-container: #d1f0e8;
+  --md-sys-color-outline: #2f544b;
+  --md-sys-color-outline-variant: #1c3630;
+  --md-sys-color-on-surface: #f2ede4;
+  --md-sys-color-on-surface-variant: #b3c5c0;
+  --btn-primary-bg: #dc4b2f;
+  --btn-primary-fg: #ffffff;
 }
 
 body {
-  background: #0b1413 !important;
-  color: #f2ede4 !important;
+  background: var(--md-sys-color-background, #0b1413);
+  color: var(--md-sys-color-on-surface, #f2ede4);
 }
 
 .main-content {
-  background: #0f1a18 !important;
+  background: var(--md-sys-color-surface, #0f1a18);
 }
 
 .sidebar {
-  background: #0b1413 !important;
-  border-right: 1px solid #162a26 !important;
+  background: var(--md-sys-color-background, #0b1413);
+  border-right: 1px solid var(--md-sys-color-surface-container, #162a26);
 }
 
 .sidebar .nav-item.active .nav-indicator {
-  background: #1e3833 !important;
-  color: #dc4b2f !important;
+  background: var(--md-sys-color-surface-container-high, #1e3833) !important;
+  color: var(--md-sys-color-primary, #dc4b2f) !important;
 }
 
 .playbar {
-  background: #142622 !important;
-  border: 1px solid #23433c !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.65), 0 0 24px rgba(47, 84, 75, 0.25) !important;
+  background: var(--md-sys-color-surface-container-low, #142622);
+  border: 1px solid var(--md-sys-color-outline-variant, #23433c);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.65), 0 0 24px rgba(47, 84, 75, 0.25);
 }
 
 .btn-pill-primary, .play-pause-btn, #btn-player-play-pause, .btn-play-pause, #btn-shuffle-play-playlist {
-  background: #dc4b2f !important;
-  color: #ffffff !important;
-  box-shadow: 0 2px 12px rgba(220, 75, 47, 0.45) !important;
+  background: var(--btn-primary-bg, var(--md-sys-color-primary, #dc4b2f)) !important;
+  color: var(--btn-primary-fg, #ffffff) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35) !important;
 }
 
 .btn-pill-primary:hover, .btn-play-pause:hover, #btn-shuffle-play-playlist:hover {
-  background: #f05537 !important;
-  box-shadow: 0 4px 18px rgba(220, 75, 47, 0.65) !important;
+  background: var(--btn-primary-hover, #f05537) !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45) !important;
 }
 
 .playlist-detail-header {
@@ -8148,9 +8184,9 @@ body {
 }
 
 .sidebar:not(.expanded) .nav-item.active .nav-indicator {
-  background: #1e3833 !important;
-  color: #dc4b2f !important;
-  box-shadow: 0 0 14px rgba(220, 75, 47, 0.3) !important;
+  background: var(--md-sys-color-surface-container-high, #1e3833) !important;
+  color: var(--md-sys-color-primary, #dc4b2f) !important;
+  box-shadow: 0 0 14px color-mix(in srgb, var(--md-sys-color-primary, #dc4b2f) 40%, transparent) !important;
 }
 
 .sidebar:not(.expanded) .nav-label {
@@ -8210,9 +8246,9 @@ body {
 }
 
 .sidebar.expanded .nav-item.active {
-  background: #1e3833 !important;
-  color: #dc4b2f !important;
-  border-left: 3px solid #dc4b2f !important;
+  background: var(--md-sys-color-surface-container-high, #1e3833) !important;
+  color: var(--md-sys-color-primary, #dc4b2f) !important;
+  border-left: 3px solid var(--md-sys-color-primary, #dc4b2f) !important;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35) !important;
   font-weight: 600;
 }
@@ -8305,8 +8341,8 @@ body {
 }
 
 #rename-playlist-input:focus {
-  border-color: #dc4b2f !important;
-  box-shadow: 0 0 12px rgba(220, 75, 47, 0.4) !important;
+  border-color: var(--md-sys-color-primary, #dc4b2f) !important;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--md-sys-color-primary, #dc4b2f) 40%, transparent) !important;
   outline: none !important;
 }
 
@@ -8320,13 +8356,13 @@ body {
 }
 
 #playlist-detail-title:hover {
-  color: #dc4b2f !important;
+  color: var(--md-sys-color-primary, #dc4b2f) !important;
 }
 
 #playlist-detail-title:hover::after {
   content: ' ✎';
   font-size: 18px;
-  color: #dc4b2f;
+  color: var(--md-sys-color-primary, #dc4b2f);
   opacity: 0.85;
 }
 
@@ -8501,4 +8537,32 @@ body.mini .logo-text {
   overflow-wrap: break-word !important;
   word-break: break-word !important;
   max-width: 100% !important;
+}
+
+/* Favorite Buttons Active Color & Fill across entire app */
+.btn-icon-pill.active,
+.btn-row-fav.active,
+#btn-toggle-fav.active,
+#btn-fav-playlist.active,
+#btn-fav-album.active {
+  color: var(--md-sys-color-primary, #dc4b2f) !important;
+}
+
+.btn-icon-pill.active svg,
+.btn-row-fav.active svg,
+#btn-toggle-fav.active svg,
+#btn-fav-playlist.active svg,
+#btn-fav-album.active svg {
+  color: var(--md-sys-color-primary, #dc4b2f) !important;
+  fill: var(--md-sys-color-primary, #dc4b2f) !important;
+  stroke: var(--md-sys-color-primary, #dc4b2f) !important;
+}
+
+.btn-icon-pill.active svg path,
+.btn-row-fav.active svg path,
+#btn-toggle-fav.active svg path,
+#btn-fav-playlist.active svg path,
+#btn-fav-album.active svg path {
+  fill: var(--md-sys-color-primary, #dc4b2f) !important;
+  stroke: var(--md-sys-color-primary, #dc4b2f) !important;
 }

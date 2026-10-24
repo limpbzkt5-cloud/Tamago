@@ -6,6 +6,7 @@
     constructor() {
       this.ctx = null;
       this.mediaSource = null;
+      this.sourceBridgeNode = null;
       this.graphInitialized = false;
 
       this.stdInput = null;
@@ -131,6 +132,8 @@
       if (!this.graphInitialized) {
         try {
           this.mediaSource = this.ctx.createMediaElementSource(audioElement);
+          this.sourceBridgeNode = this.ctx.createGain();
+          this.mediaSource.connect(this.sourceBridgeNode);
 
           this.stdInput = this.ctx.createGain();
           this.hqInput = this.ctx.createGain();
@@ -281,7 +284,7 @@
       this._routingState = stateKey;
 
       try {
-        this.mediaSource.disconnect();
+        if (this.sourceBridgeNode) this.sourceBridgeNode.disconnect();
         this.stdInput.disconnect();
         this.hqLimiter.disconnect();
         this.bus.disconnect();
@@ -297,10 +300,11 @@
       } catch (e) {}
 
       const inputNode = isHqOn ? this.hqLimiter : this.stdInput;
+      const sourceNode = this.sourceBridgeNode || this.mediaSource;
       if (isHqOn) {
-        this.mediaSource.connect(this.hqInput);
+        sourceNode.connect(this.hqInput);
       } else {
-        this.mediaSource.connect(this.stdInput);
+        sourceNode.connect(this.stdInput);
       }
 
       if (isEqOn) {
