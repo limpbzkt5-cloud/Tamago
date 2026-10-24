@@ -3038,7 +3038,7 @@ async function handleSaveCustomLyrics(req, res, title, artist) {
 const SPOTIFY_PATHFINDER_URL = 'https://api-partner.spotify.com/pathfinder/v1/query';
 const SPOTIFY_FETCH_PLAYLIST_HASH = '8964e8eafb21aa992a7d951d256d83285c04be2105d209262901de70cb97584a';
 
-function pathfinderRequest(accessToken, variables) {
+function pathfinderRequestSingle(accessToken, variables) {
   return new Promise((resolve, reject) => {
     const payload = JSON.stringify({
       variables,
@@ -3057,7 +3057,6 @@ function pathfinderRequest(accessToken, variables) {
       },
       timeout: 15000
     }, (r) => {
-      try { logger.log(r.statusCode === 200 ? 'warn' : 'error', `api-partner.spotify.com status ${r.statusCode}`); } catch (_) {}
       let b = '';
       r.on('data', c => b += c);
       r.on('end', () => {
@@ -3066,12 +3065,10 @@ function pathfinderRequest(accessToken, variables) {
       });
     });
     req.on('error', (err) => {
-      try { logger.log('error', `api-partner.spotify.com error: ${err.message}`); } catch (_) {}
       reject(err);
     });
     req.on('timeout', () => {
       req.destroy();
-      try { logger.log('error', 'api-partner.spotify.com timeout'); } catch (_) {}
       reject(new Error('Pathfinder request timed out'));
     });
     req.write(payload);
@@ -3079,9 +3076,31 @@ function pathfinderRequest(accessToken, variables) {
   });
 }
 
+async function pathfinderRequest(accessToken, variables, maxRetries = 3) {
+  let lastErr = null;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      if (attempt > 0) {
+        await new Promise(r => setTimeout(r, 600 * Math.pow(2, attempt - 1)));
+      }
+      return await pathfinderRequestSingle(accessToken, variables);
+    } catch (e) {
+      lastErr = e;
+      try { logger.log('warn', `Pathfinder attempt ${attempt + 1} failed: ${e.message}`); } catch (_) {}
+    }
+  }
+  throw lastErr || new Error('Pathfinder request failed after retries');
+}
+
 async function fetchFullSpotifyPlaylist(playlistId, accessToken) {
   const uri = `spotify:playlist:${playlistId}`;
-  const first = await pathfinderRequest(accessToken, { uri, offset: 0, limit: 100, enableWatchFeedEntrypoint: true });
+  let first;
+  try {
+    first = await pathfinderRequest(accessToken, { uri, offset: 0, limit: 100, enableWatchFeedEntrypoint: true });
+  } catch (e) {
+    try { logger.log('warn', `Pathfinder initial page failed: ${e.message}`); } catch (_) {}
+    return null;
+  }
   const content = first?.data?.playlistV2?.content;
   if (!content || !Array.isArray(content.items)) return null;
   const total = content.totalCount || content.items.length;
@@ -3089,21 +3108,27 @@ async function fetchFullSpotifyPlaylist(playlistId, accessToken) {
   let offset = items.length;
   let guard = 0;
   while (offset < total && guard++ < 100) {
-    const page = await pathfinderRequest(accessToken, { uri, offset, limit: 100, enableWatchFeedEntrypoint: true });
-    const pageItems = page?.data?.playlistV2?.content?.items;
-    if (!Array.isArray(pageItems) || pageItems.length === 0) throw new Error('Incomplete Pathfinder playlist');
-    items.push(...pageItems);
-    offset += pageItems.length;
+    await new Promise(r => setTimeout(r, 200));
+    try {
+      const page = await pathfinderRequest(accessToken, { uri, offset, limit: 100, enableWatchFeedEntrypoint: true });
+      const pageItems = page?.data?.playlistV2?.content?.items;
+      if (!Array.isArray(pageItems) || pageItems.length === 0) break;
+      items.push(...pageItems);
+      offset += pageItems.length;
+    } catch (err) {
+      try { logger.log('warn', `Pathfinder offset ${offset} failed, stopping early: ${err.message}`); } catch (_) {}
+      break;
+    }
   }
-  if (offset < total) throw new Error('Incomplete Pathfinder playlist');
   const tracks = items.map(it => {
-    const t = it?.itemV2?.data || it?.item?.data || {};
-    const artists = (t.albumOfTrack?.artists?.items || []).map(a => a.profile?.name).filter(Boolean);
+    const t = it?.itemV2?.data || it?.item?.data || it?.track || it || {};
+    const rawArtists = t.artists?.items || t.albumOfTrack?.artists?.items || t.artists || [];
+    const artists = rawArtists.map(a => (typeof a === 'string' ? a : (a?.profile?.name || a?.name || ''))).filter(Boolean);
     const durationMs = t.trackDuration?.totalMilliseconds || t.duration?.totalMilliseconds || t.duration_ms;
     const duration = typeof durationMs === 'number' ? Math.round(durationMs / 1000) : 0;
-    return { title: (t.name || '').trim(), artist: artists.join(', '), duration };
+    return { title: (t.name || t.title || '').trim(), artist: artists.join(', '), duration };
   }).filter(t => t.title);
-  return { tracks, total };
+  return { tracks, total: Math.max(tracks.length, total) };
 }
 
 async function trySpotifyWebApi(playlistId) {
@@ -4504,7 +4529,8 @@ const server = http.createServer(async (req, res) => {
     return res.end();
   }
 
-  const parsedUrl = url.parse(req.url, true);
+  const parsedUrl = new URL(req.url, `http://${req.headers.host || '127.0.0.1'}`);
+  parsedUrl.query = Object.fromEntries(parsedUrl.searchParams.entries());
 
   if (TOKEN_PROTECTED_ROUTES.has(parsedUrl.pathname) && !tokenMatches(req.headers['x-riff-token'])) {
     res.writeHead(403, { 'Content-Type': 'application/json' });
