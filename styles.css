@@ -8329,3 +8329,176 @@ body {
   color: #dc4b2f;
   opacity: 0.85;
 }
+
+
+/* ==========================================================================
+   POLISHED RESPONSIVE CONTAINERIZATION & TEXT OVERFLOW GUARDS
+   Prevents text clipping, overlaps, and container breakout on resize / mini
+   ========================================================================== */
+
+/* Strict text containerization in playbar across all dimensions */
+.playbar-left {
+  min-width: 0 !important;
+  flex: 0 1 340px !important;
+}
+
+.track-meta {
+  min-width: 0 !important;
+  flex: 1 1 0 !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+}
+
+.track-title-marquee {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.track-title {
+  display: block !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.track-artist {
+  display: block !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.playbar-center {
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+}
+
+.playbar-right {
+  min-width: 0 !important;
+  flex: 0 0 auto !important;
+}
+
+/* Medium & Narrow Window Polish (601px - 920px) */
+@media (max-width: 920px) {
+  .top-nav {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    padding: 0 16px !important;
+  }
+
+  .top-nav .search-box-wrapper {
+    position: static !important;
+    left: auto !important;
+    transform: none !important;
+    flex: 1 1 auto !important;
+    max-width: 460px !important;
+    min-width: 0 !important;
+    width: auto !important;
+  }
+
+  .platform-switch-container {
+    flex: 0 0 auto !important;
+  }
+
+  .platform-btn {
+    padding: 6px 10px !important;
+    gap: 0 !important;
+  }
+
+  .platform-btn span {
+    display: none !important;
+  }
+
+  .playbar {
+    padding: 0 12px !important;
+    gap: 10px !important;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr) auto !important;
+  }
+
+  .playbar-left {
+    gap: 8px !important;
+    padding-left: 4px !important;
+  }
+
+  #btn-edit-current-track,
+  #btn-playbar-more,
+  .visualizer-container,
+  .volume-control-group .volume-slider-wrapper {
+    display: none !important;
+  }
+
+  .playback-controls {
+    gap: 8px !important;
+  }
+}
+
+/* Mini Player Mode Containerization */
+body.mini .playbar {
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 8px !important;
+  overflow: hidden !important;
+}
+
+body.mini .playbar-left {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  flex: 1 1 auto !important;
+}
+
+body.mini .playbar-left .track-meta {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  flex: 1 1 auto !important;
+}
+
+body.mini .playbar-left .track-title,
+body.mini .playbar-left .track-artist {
+  display: block !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+body.mini .titlebar-drag {
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+body.mini .logo-text {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  max-width: 120px !important;
+}
+
+/* Modals & Dialogs Containment */
+.modal-card,
+.dialog-card,
+.download-modal,
+.settings-pane {
+  max-width: min(92vw, 560px) !important;
+  box-sizing: border-box !important;
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+}
+
+.modal-header h3,
+.modal-title,
+.modal-subtitle {
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+  max-width: 100% !important;
+}
