@@ -12026,16 +12026,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     A.forEach((t) => { if (B.has(t)) hit++; });
     return hit / Math.max(A.size, B.size);
   }
+  function cleanTitleForSim(str) {
+    return (str || '')
+      .replace(/\s*[\(\[](?:official\s*(?:video|audio|music\s*video|lyric\s*video|hd)?|mv|lyrics?|audio)[\)\]]/gi, '')
+      .replace(/\s*ft\.?.*$/i, '')
+      .replace(/\s*feat\.?.*$/i, '')
+      .trim();
+  }
+
   function pickBestMatch(sp, results) {
     let best = null;
     let bestScore = 0;
+    const cleanSpTitle = cleanTitleForSim(sp.title);
     for (const r of results) {
+      const cleanRTitle = cleanTitleForSim(r.title);
       const text = tokenSimilarity(`${sp.title} ${sp.artist}`, `${r.title} ${r.artist}`);
-      const titleSim = tokenSimilarity(sp.title, r.title);
+      const titleSim = Math.max(tokenSimilarity(sp.title, r.title), tokenSimilarity(cleanSpTitle, cleanRTitle));
       const dDiff = sp.duration && r.duration ? Math.abs(sp.duration - r.duration) : 99;
-      const durationOk = dDiff <= 3;
-      const score = text + (durationOk ? 0.6 : 0) + titleSim * 0.3;
-      const accept = (durationOk && text >= 0.2) || titleSim >= 0.6 || text >= 0.55;
+      const durationOk = dDiff <= 7;
+      const score = text + (durationOk ? 0.6 : 0) + titleSim * 0.4 - Math.min(dDiff, 20) * 0.01;
+      const accept = (durationOk && (text >= 0.16 || titleSim >= 0.35)) || titleSim >= 0.52 || text >= 0.42;
       if (accept && score > bestScore) { best = r; bestScore = score; }
     }
     return best;
@@ -12061,7 +12071,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       throw new Error((sData && sData.error) || `Status ${sRes.status}`);
     }
 
-    const results = await pool(list || [], 6, async (t) => {
+    const results = await pool(list || [], 3, async (t) => {
+      await new Promise(r => setTimeout(r, 80));
       if (aborted) return null;
       let matched = null;
       let lastErr = null;
